@@ -17,9 +17,7 @@ public class AetherAccount {
 		this.aetherAccountRole = accountRole;
 
 		// Setup email:
-		String id = aetherAccountUser.getAetherUserId();
-		String lastFour = id.substring(id.length() - 4, id.length());
-		aetherAccountEmail = aetherAccountUser.getAetherUserName() + lastFour + "@anzel.org";
+		aetherAccountEmail = aetherAccountUser.getAetherUserName() + "@anzel.org";
 	}
 
 	public AetherUser getAetherAccountUser() {

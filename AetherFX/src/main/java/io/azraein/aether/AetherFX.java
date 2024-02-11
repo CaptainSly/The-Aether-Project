@@ -7,6 +7,8 @@ import org.tinylog.Logger;
 
 import io.azraein.aether.alerts.AboutAlert;
 import io.azraein.aether.alerts.DisconnectedAlert;
+import io.azraein.aether.alerts.NoConnectionAlert;
+import io.azraein.aether.alerts.ServerErrorAlert;
 import io.azraein.aether.screens.AetherLoginScreen;
 import io.azraein.aether.screens.AetherScreen;
 import io.azraein.aether.server.AetherClient;
@@ -40,10 +42,14 @@ public class AetherFX extends Application {
 	public void start(Stage primaryStage) throws Exception {
 		this.primaryStage = primaryStage;
 
+		// Screens
 		aetherScreens.put("loginScreen", new AetherLoginScreen(this));
 
+		// Alerts
 		aetherAlerts.put("aetherDisconnect", new DisconnectedAlert());
 		aetherAlerts.put("aetherAbout", new AboutAlert());
+		aetherAlerts.put("aetherNoConnection", new NoConnectionAlert());
+		aetherAlerts.put("aetherServerError", new ServerErrorAlert(""));
 
 		primaryStage.setScene(new Scene(aetherScreens.get("loginScreen").getRootContainer(), 1280, 720));
 		primaryStage.setTitle("Aether E-Portal");
@@ -52,6 +58,7 @@ public class AetherFX extends Application {
 		connectedToServerProperty.addListener((obs, oldValue, newValue) -> {
 
 			if (!newValue) {
+				Logger.debug("Disconnected from Server");
 				aetherAlerts.get("aetherDisconnect").showAndWait();
 			}
 
@@ -60,6 +67,7 @@ public class AetherFX extends Application {
 			}
 
 			if (newValue && oldValue == false) {
+				Logger.debug("Connecting to Server");
 				aetherSListener = new AetherServerListenerServiceFX(this, aetherClient);
 				aetherSListener.start();
 			}
@@ -71,12 +79,20 @@ public class AetherFX extends Application {
 			if (newValue != null) {
 				Logger.debug("serverMessage == " + newValue);
 
-				switch (newValue) {
-				case "STOP":
-					connectedToServerProperty.set(false);
-					break;
-				}
+				String[] tokens = newValue.split(" ");
 
+				if (tokens[0].equals("error")) {
+					// Merge following tokens
+
+					String message = "";
+					for (int i = 1; i < tokens.length; i++)
+						message += tokens[i] + " ";
+
+					var alert = ((ServerErrorAlert) aetherAlerts.get("aetherServerError"));
+					alert.setMessage(message);
+					alert.show();
+				} else if (tokens[0].equalsIgnoreCase("stop"))
+					connectedToServerProperty.set(false);
 			}
 
 		});

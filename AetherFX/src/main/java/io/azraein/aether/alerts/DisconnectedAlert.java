@@ -9,7 +9,7 @@ public class DisconnectedAlert extends Alert {
 
 		this.setTitle("Disconnected from Aether Server");
 		this.setHeaderText("Woah there! Slow down now buckaroo!");
-		this.setContentText("Couldn't connect to the Aether Server");
+		this.setContentText("We've been disconnected from the Server!");
 	}
 
 }

@@ -117,6 +117,8 @@ public class AetherServerUI extends Application {
 		String message = messageInputField.getText();
 		if (!message.isEmpty()) {
 
+			// TODO: REDO THIS. 
+			
 			// Process Server Commands before sending them out to (a) client(s)
 
 			// Breaks the message up into tokens for parsing

@@ -3,6 +3,7 @@ package io.azraein.aether;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -12,6 +13,7 @@ import org.tinylog.Logger;
 
 import io.azraein.aether.account.AetherUser;
 import io.azraein.aether.server.AetherClient;
+import io.azraein.aether.server.commands.AetherCommand;
 import io.azraein.aether.utils.Aether;
 import io.azraein.aether.utils.AetherConstants;
 import io.azraein.aether.utils.AetherSecurity;
@@ -22,6 +24,8 @@ public class AetherServer {
 	private ServerSocket aetherServerSocket;
 	private ExecutorService clientThreadPool;
 	private Map<String, AetherClient> clients;
+
+	private Map<String, AetherCommand> commands;
 
 	// AetherUsers
 	private Map<String, AetherUser> aetherUsers;
@@ -34,11 +38,31 @@ public class AetherServer {
 		clientThreadPool = Executors.newCachedThreadPool();
 		clients = new ConcurrentHashMap<>();
 		aetherUsers = new ConcurrentHashMap<>();
+
+		aetherUsers.put("testUser", new AetherUser("testUser", "password"));
+
+		commands = new HashMap<>();
+
+		initCommands();
 	}
 
 	public void startServer() throws IOException {
 		aetherServerSocket = new ServerSocket(AetherConstants.AETHER_SERVER_PORT);
 		listenForClients();
+	}
+
+	private void initCommands() {
+		commands.put("user", new AetherCommand("user", "Creates a new user by supplying the username and password", 2));
+
+		commands.put("login", new AetherCommand("login", "Logs the provided user into the server if they exist", 2));
+
+		commands.put("help", new AetherCommand("help", "Provides help information about a command", 1));
+		commands.put("whisper",
+				new AetherCommand("whisper", "Sends a message to a specific client based off the clientId", 2));
+
+		commands.put("broadcast",
+				new AetherCommand("broadcast", "Broadcasts a message to every client connected to the server", 1));
+		commands.put("error", new AetherCommand("error", "Throw an Error on the Client, has no effect on Server", 1));
 	}
 
 	private void listenForClients() {
@@ -101,58 +125,8 @@ public class AetherServer {
 			aetherServerUI.println("Client " + clientId + ": " + message);
 		});
 
-		// TODO: Process Client Messages
 		String[] msgTokens = message.split(" ");
-
-		// COMMAND - ARGS
-		if (msgTokens[0].equalsIgnoreCase("LOGIN")) { // Login to Account
-			// Token 1 = USERNAME
-			// Token 2 = PLAINTEXT PASSWORD
-
-			AetherUser user = null;
-			for (AetherUser u : aetherUsers.values()) {
-				if (u.getAetherUserName().equals(msgTokens[1])) {
-					user = u;
-					break;
-				}
-			}
-
-			if (user != null) {
-				// Check to make sure password is correct
-				String userDecryptedPass = AetherSecurity.decrypt(user.getAetherEncryptedPassword(),
-						user.getAetherPassPhrase());
-
-				if (userDecryptedPass.equals(msgTokens[1])) {
-					// TODO: Send over the correct data that needs to be sent. For now just send the
-					// client a message that it was successful.
-					final AetherUser d = user;
-					Platform.runLater(
-							() -> aetherServerUI.println("Successful login to account: " + d.getAetherUserName()));
-					clients.get(clientId).getClientWriter().println("LOGIN TRUE");
-
-				}
-			}
-
-		} else if (msgTokens[0].equalsIgnoreCase("MKACT")) { // Create Account
-			// Token 1 = USERNAME
-			// Token 2 = PLAINTEXT PASSWORD
-			Logger.debug("Creating Account");
-
-			// Create AetherUser
-			AetherUser newUser = new AetherUser("employee_" + Aether.rnJesus.nextInt(1000, 9999), msgTokens[1]);
-			newUser.setPassword(msgTokens[2]);
-
-			// Put the user into the account
-			aetherUsers.put(newUser.getAetherUserId(), newUser);
-		} else if (msgTokens[0].equalsIgnoreCase("LISTUSERS")) {
-			Platform.runLater(() -> {
-
-				for (AetherUser u : aetherUsers.values())
-					aetherServerUI.println(u.getAetherUserName());
-
-			});
-		}
-
+		processCommand(msgTokens, clientId);
 	}
 
 	public void sendMessage(String clientId, String message) {
@@ -178,6 +152,64 @@ public class AetherServer {
 		}
 	}
 
+	private void processCommand(String[] tokens, String clientId) {
+
+		// Check to see if the first token is inside the commands map
+		String command = tokens[0];
+		if (commands.containsKey(command)) {
+
+			// Get the Command Record
+			AetherCommand cmd = commands.get(command);
+
+			if (cmd.commandName().equalsIgnoreCase("login")) {
+
+				// Login time
+				String username = tokens[1];
+				String password = tokens[2];
+
+				if (aetherUsers.containsKey(username)) {
+
+					var user = aetherUsers.get(username);
+
+					// Check the passwords against each other
+					if (password.equals(
+							AetherSecurity.decrypt(user.getAetherEncryptedPassword(), user.getAetherPassPhrase()))) {
+
+						Logger.debug("Correct password");
+						// TODO: now we need to find out how to send json data or something through the
+						// server
+
+					}
+
+				} else {
+					clients.get(clientId).getClientWriter().println("error User " + username + " does not exist!");
+
+				}
+
+			} else if (cmd.commandName().equalsIgnoreCase("user")) {
+
+				// Register Time
+				String username = tokens[1];
+				String password = tokens[2];
+
+				if (aetherUsers.containsKey(username)) {
+					// TODO: throw an error, towards the client that the user already exists.
+					clients.get(clientId).getClientWriter().println("error User " + username + " already exists!");
+					return;
+				}
+
+				var user = new AetherUser(username, password);
+				if (user != null) {
+					// TODO: send the data to the client
+					aetherUsers.put(user.getAetherUserName(), user);
+				}
+
+			}
+
+		}
+
+	}
+
 	public ServerSocket getSocket() {
 		return aetherServerSocket;
 	}
@@ -196,6 +228,10 @@ public class AetherServer {
 
 	public Map<String, AetherUser> getAccounts() {
 		return aetherUsers;
+	}
+
+	public Map<String, AetherCommand> commands() {
+		return commands;
 	}
 
 	public void setClientThreadPool(ExecutorService clientThreadPool) {
