@@ -1,5 +1,11 @@
 # The Aether Project
 
-A Successor to my Call of Cthulhu Prop Project Eden. 
+The Aether Project is a "Prop" Program made for use with the Tabletop Roleplaying Game Call of Cthulhu. The programs inside this project are intended to be used by the Keeper of Arcane Lore (Dungeon Master) in helping facilitate lore and clues to the Players. 
 
-Eden was an attempt at writing a decent "Corporate Style" Application in JavaFX. This updated version incorporates a Server, a decoupled Library and currently a JavaFX Client. 
+
+## Badges
+
+[![CC BY-NC 4.0 License](https://img.shields.io/badge/License-CC_BY--NC_4.0-green.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+
+![Logo](AnzelElectronics Logo.png)
+
