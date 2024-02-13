@@ -11,6 +11,10 @@ import java.util.concurrent.Executors;
 
 import org.tinylog.Logger;
 
+import com.google.gson.Gson;
+
+import io.azraein.aether.account.AetherAccount;
+import io.azraein.aether.account.AetherAccount.AccountRole;
 import io.azraein.aether.account.AetherUser;
 import io.azraein.aether.server.AetherClient;
 import io.azraein.aether.server.commands.AetherCommand;
@@ -27,19 +31,23 @@ public class AetherServer {
 
 	private Map<String, AetherCommand> commands;
 
-	// AetherUsers
-	private Map<String, AetherUser> aetherUsers;
+	// AetherAccounts
+	private Map<String, AetherAccount> aetherAccounts;
 
 	private final AetherServerUI aetherServerUI;
+
+	private Gson gson;
 
 	public AetherServer(AetherServerUI aetherServerUI) {
 		this.aetherServerUI = aetherServerUI;
 
+		gson = new Gson();
+
 		clientThreadPool = Executors.newCachedThreadPool();
 		clients = new ConcurrentHashMap<>();
-		aetherUsers = new ConcurrentHashMap<>();
+		aetherAccounts = new ConcurrentHashMap<>();
 
-		aetherUsers.put("testUser", new AetherUser("testUser", "password"));
+		aetherAccounts.put("testUser", new AetherAccount(new AetherUser("testUser", "password"), AccountRole.USER));
 
 		commands = new HashMap<>();
 
@@ -62,7 +70,7 @@ public class AetherServer {
 
 		commands.put("broadcast",
 				new AetherCommand("broadcast", "Broadcasts a message to every client connected to the server", 1));
-		commands.put("error", new AetherCommand("error", "Throw an Error on the Client, has no effect on Server", 1));
+		commands.put("error", new AetherCommand("error", "Throw an Error on the Client, has no effect on Server", 2));
 	}
 
 	private void listenForClients() {
@@ -152,37 +160,44 @@ public class AetherServer {
 		}
 	}
 
-	private void processCommand(String[] tokens, String clientId) {
-
+	public void processCommand(String[] tokens, String clientId) {
+		var client = clients.get(clientId);
 		// Check to see if the first token is inside the commands map
 		String command = tokens[0];
+		if (tokens.length < 2) {
+			client.getClientWriter().println("error COMMAND_ERROR Malformed Command sent to server");
+			return;
+		}
+
 		if (commands.containsKey(command)) {
 
 			// Get the Command Record
 			AetherCommand cmd = commands.get(command);
-
-			if (cmd.commandName().equalsIgnoreCase("login")) {
+			if (cmd.commandName().equalsIgnoreCase("whisper")) {
+				sendMessage(tokens[1], combineTokens(tokens, 2));
+			} else if (cmd.commandName().equalsIgnoreCase("broadcast")) {
+				broadcastMessage(combineTokens(tokens, 1));
+			} else if (cmd.commandName().equalsIgnoreCase("login")) {
 
 				// Login time
 				String username = tokens[1];
 				String password = tokens[2];
 
-				if (aetherUsers.containsKey(username)) {
+				if (aetherAccounts.containsKey(username)) {
 
-					var user = aetherUsers.get(username);
+					var user = aetherAccounts.get(username).getAetherAccountUser();
 
 					// Check the passwords against each other
 					if (password.equals(
 							AetherSecurity.decrypt(user.getAetherEncryptedPassword(), user.getAetherPassPhrase()))) {
 
 						Logger.debug("Correct password");
-						// TODO: now we need to find out how to send json data or something through the
-						// server
+						client.getClientWriter().println("FILE_USER " + gson.toJson(aetherAccounts.get(username)));
 
 					}
 
 				} else {
-					clients.get(clientId).getClientWriter().println("error User " + username + " does not exist!");
+					client.getClientWriter().println("error ACCOUNT_ERROR User " + username + " does not exist!");
 
 				}
 
@@ -191,23 +206,28 @@ public class AetherServer {
 				// Register Time
 				String username = tokens[1];
 				String password = tokens[2];
+				int accountType = Integer.parseInt(tokens[3]);
 
-				if (aetherUsers.containsKey(username)) {
+				if (aetherAccounts.containsKey(username)) {
 					// TODO: throw an error, towards the client that the user already exists.
-					clients.get(clientId).getClientWriter().println("error User " + username + " already exists!");
+					client.getClientWriter().println("error ACCOUNT_ERROR User " + username + " already exists!");
 					return;
 				}
 
-				var user = new AetherUser(username, password);
-				if (user != null) {
-					// TODO: send the data to the client
-					aetherUsers.put(user.getAetherUserName(), user);
-				}
+				// TODO: Create User Account
 
 			}
 
 		}
 
+	}
+
+	public String combineTokens(String[] tokens, int idx) {
+		String str = "";
+		for (int i = idx; i < tokens.length; i++)
+			str += tokens[i] + " ";
+
+		return str;
 	}
 
 	public ServerSocket getSocket() {
@@ -226,8 +246,8 @@ public class AetherServer {
 		return clients;
 	}
 
-	public Map<String, AetherUser> getAccounts() {
-		return aetherUsers;
+	public Map<String, AetherAccount> getAccounts() {
+		return aetherAccounts;
 	}
 
 	public Map<String, AetherCommand> commands() {

@@ -21,7 +21,7 @@ public class AetherLoginScreen extends AetherScreen {
 	private VBox aetherLoginBox;
 
 	private Label aetherCompanyLbl, aetherSloganLbl;
-
+	
 	public AetherLoginScreen(AetherFX parent) {
 		super(parent);
 
@@ -47,6 +47,41 @@ public class AetherLoginScreen extends AetherScreen {
 
 		Button loginBtn = new Button("Login");
 		Button registerBtn = new Button("Register");
+
+		loginBtn.setDisable(true);
+		registerBtn.setDisable(true);
+
+		userLoginFld.textProperty().addListener((obs, oldVal, newVal) -> {
+
+			if (!newVal.isEmpty() || !newVal.isBlank()) {
+				if (!userPassFld.getText().isEmpty() || !userPassFld.getText().isBlank()) {
+
+					loginBtn.setDisable(false);
+					registerBtn.setDisable(false);
+
+				}
+			} else {
+				loginBtn.setDisable(true);
+				registerBtn.setDisable(true);
+			}
+
+		});
+
+		userPassFld.textProperty().addListener((obs, oldVal, newVal) -> {
+
+			if (!newVal.isEmpty() || !newVal.isBlank()) {
+				if (!userLoginFld.getText().isEmpty() || !userLoginFld.getText().isBlank()) {
+
+					loginBtn.setDisable(false);
+					registerBtn.setDisable(false);
+
+				}
+			} else {
+				loginBtn.setDisable(true);
+				registerBtn.setDisable(true);
+			}
+
+		});
 
 		loginBtn.setOnAction(e -> {
 
@@ -75,7 +110,6 @@ public class AetherLoginScreen extends AetherScreen {
 
 			Logger.debug("Trying to create account with " + username + " " + password);
 			parent.getAetherClient().getClientWriter().println("user " + username + " " + password);
-
 		});
 
 		loginGrid.add(userloginLbl, 0, 0);

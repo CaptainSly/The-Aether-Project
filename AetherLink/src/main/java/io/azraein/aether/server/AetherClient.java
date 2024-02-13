@@ -1,9 +1,6 @@
 package io.azraein.aether.server;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 
 import io.azraein.aether.utils.AetherConstants;
@@ -13,28 +10,35 @@ public class AetherClient {
 	private final String clientId;
 
 	private Socket clientSocket;
-	private PrintWriter clientWriter;
-	private BufferedReader clientReader;
+
+	// Sending and Receiving Strings
+	private PrintWriter clientStrWriter;
+	private BufferedReader clientStrReader;
 
 	public AetherClient(Socket clientSocket, String clientId) throws IOException {
 		this.clientSocket = clientSocket;
 		this.clientId = clientId;
-		this.clientWriter = new PrintWriter(clientSocket.getOutputStream(), true);
-		this.clientReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
-		clientWriter.println("Client " + clientId + " has connected");
+		this.clientStrWriter = new PrintWriter(clientSocket.getOutputStream(), true);
+		this.clientStrReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+		
+		getClientWriter().println("broadcast " + clientId + " connected to Aether Server");
 	}
 
 	public void openClient() throws IOException {
 		this.clientSocket = new Socket(AetherConstants.AETHER_SERVER_IP, AetherConstants.AETHER_SERVER_PORT);
-		this.clientWriter = new PrintWriter(clientSocket.getOutputStream(), true);
-		this.clientReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+		this.clientStrWriter = new PrintWriter(clientSocket.getOutputStream(), true);
+		this.clientStrReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+		getClientWriter().println("broadcast " + clientId + " connected to Aether Server");
 	}
 
 	public void closeClient() {
 		try {
-			clientWriter.close();
-			clientReader.close();
+			clientStrWriter.close();
+			clientStrReader.close();
+
 			clientSocket.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -50,11 +54,11 @@ public class AetherClient {
 	}
 
 	public PrintWriter getClientWriter() {
-		return clientWriter;
+		return clientStrWriter;
 	}
 
 	public BufferedReader getClientReader() {
-		return clientReader;
+		return clientStrReader;
 	}
 
 }

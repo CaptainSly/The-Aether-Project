@@ -1,9 +1,13 @@
 package io.azraein.aether.account;
 
+import java.io.Serializable;
+
 import io.azraein.aether.utils.Aether;
 import io.azraein.aether.utils.AetherSecurity;
 
-public class AetherUser {
+public class AetherUser implements Serializable {
+
+	private static final long serialVersionUID = -7491737714238380215L;
 
 	private String aetherUserName;
 	private String aetherEncryptedPassword;
@@ -14,6 +18,12 @@ public class AetherUser {
 	public AetherUser(String aetherUserName, String password) {
 		this.aetherUserName = aetherUserName;
 		setPassword(password);
+	}
+
+	public AetherUser(String aetherUserName, String encryptedPass, String passPhrase) {
+		this.aetherUserName = aetherUserName;
+		this.aetherEncryptedPassword = encryptedPass;
+		this.aetherPassPhrase = passPhrase;
 	}
 
 	private void setPassword(String password) {

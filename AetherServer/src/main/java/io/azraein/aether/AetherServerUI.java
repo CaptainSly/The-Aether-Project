@@ -1,7 +1,5 @@
 package io.azraein.aether;
 
-import org.tinylog.Logger;
-
 import io.azraein.aether.services.AetherServerService;
 import io.azraein.aether.utils.AetherConstants;
 import javafx.application.Application;
@@ -21,7 +19,7 @@ public class AetherServerUI extends Application {
 
 	private AetherServer aetherServer;
 	private AetherServerService aetherServerService;
-	
+
 	private TextArea serverOutputArea;
 	private TextField messageInputField;
 
@@ -117,37 +115,21 @@ public class AetherServerUI extends Application {
 		String message = messageInputField.getText();
 		if (!message.isEmpty()) {
 
-			// TODO: REDO THIS. 
-			
 			// Process Server Commands before sending them out to (a) client(s)
 
 			// Breaks the message up into tokens for parsing
+			serverOutputArea.appendText("Server: " + message + "\n");
 			String msgTokens[] = message.split(" ");
 
 			// COMMAND - ARGUMENTS
-			// TODO: Either write a class is considered a dictionary of commands
-
-			if (msgTokens.length < 2) {
-				println("SERVER ERROR: NOT ENOUGH ARGUMENTS");
-			}
-
-			// Get The Command
 
 			// Token 0 = Command
 			if (msgTokens[0].equalsIgnoreCase("WHISPER")) {
 				// Token 1 = Client
 				// Token 2 = Message
 
-				// Merge any straglers
-				String msg = "";
-				for (int i = 2; i < msgTokens.length; i++) {
-					msg += msgTokens[i] + " ";
-				}
-
-				Logger.debug(msg);
-
 				if (aetherServer.getClients().containsKey(msgTokens[1])) {
-					aetherServer.sendMessage(msgTokens[1], msg);
+					aetherServer.sendMessage(msgTokens[1], aetherServer.combineTokens(msgTokens, 2));
 				} else {
 					println("SERVER ERROR: NOT ENOUGH ARGUMENTS");
 					println("USAGE: WHISPER [client_id] [message]");
@@ -155,13 +137,13 @@ public class AetherServerUI extends Application {
 			} else if (msgTokens[0].equalsIgnoreCase("BROADCAST")) {
 				// Token 1 = Message
 				// Merge any straglers
-				String msg = "";
-				for (int i = 1; i < msgTokens.length; i++) {
-					msg += msgTokens[i] + " ";
-				}
+				aetherServer.broadcastMessage(aetherServer.combineTokens(msgTokens, 1));
+			} else if (msgTokens[0].equalsIgnoreCase("")) {
 
-				aetherServer.broadcastMessage(msg);
+			} else {
+				serverOutputArea.appendText("ERROR: Malformed Command: " + message);
 			}
+
 			messageInputField.clear();
 
 		}

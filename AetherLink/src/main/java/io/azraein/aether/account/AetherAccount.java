@@ -1,6 +1,10 @@
 package io.azraein.aether.account;
 
-public class AetherAccount {
+import java.io.Serializable;
+
+public class AetherAccount implements Serializable {
+
+	private static final long serialVersionUID = -8071022864987375363L;
 
 	public enum AccountRole {
 
@@ -18,6 +22,12 @@ public class AetherAccount {
 
 		// Setup email:
 		aetherAccountEmail = aetherAccountUser.getAetherUserName() + "@anzel.org";
+	}
+
+	public AetherAccount(AetherUser aetherAccountUser, AccountRole accountRole, String aetherAccountEmail) {
+		this.aetherAccountUser = aetherAccountUser;
+		this.aetherAccountRole = accountRole;
+		this.aetherAccountEmail = aetherAccountEmail;
 	}
 
 	public AetherUser getAetherAccountUser() {

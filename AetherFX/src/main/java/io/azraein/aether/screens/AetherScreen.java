@@ -5,8 +5,7 @@ import java.net.Socket;
 
 import org.controlsfx.control.StatusBar;
 import org.kordamp.ikonli.javafx.FontIcon;
-import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
-import org.kordamp.ikonli.materialdesign2.MaterialDesignL;
+import org.kordamp.ikonli.materialdesign2.*;
 
 import io.azraein.aether.AetherFX;
 import io.azraein.aether.account.AetherAccount;
@@ -61,10 +60,17 @@ public abstract class AetherScreen {
 
 	private void setupMenuBar() {
 		Menu settingsMenu = new Menu("Settings");
-		settingsMenu.setGraphic(FontIcon.of(MaterialDesignA.ACCOUNT_SETTINGS, 32, Color.BLUE));
+		settingsMenu.setGraphic(FontIcon.of(MaterialDesignC.COG, 32, Color.BLACK));
 
+		// Account Menu
+		MenuItem accountItem = new MenuItem("Account");
+		accountItem.setGraphic(FontIcon.of(MaterialDesignA.ACCOUNT_BOX, 32, Color.GREEN));
+		accountItem.setDisable(true);
+		
+		
 		// About Menu
 		MenuItem aboutItem = new MenuItem("About");
+		aboutItem.setGraphic(FontIcon.of(MaterialDesignP.PAC_MAN, 32, Color.YELLOW));
 		aboutItem.setOnAction(e -> parent.getAetherAlerts().get("aetherAbout").show());
 
 		// Connection Menu
@@ -115,8 +121,18 @@ public abstract class AetherScreen {
 			connectItem.setDisable(newValue);
 
 		});
+		
+		parent.loggedinAccountProperty().addListener((obs, oldAct, newAct) -> {
+			
+			if (newAct != null) {
+				
+				accountItem.setDisable(false);
+				
+			}
+			
+		});
 
-		settingsMenu.getItems().addAll(aboutItem);
+		settingsMenu.getItems().addAll(accountItem, aboutItem);
 		connectionMenu.getItems().addAll(connectItem);
 
 		screenMenubar.getMenus().addAll(settingsMenu, connectionMenu);

@@ -1,0 +1,3 @@
+Aether definitely needs a facelift with some CSS styling. But the current goal is to get it functional. There is an exception that gets thrown if either the server, or client closes while either is on. 
+That needs to be fixed, but for right now I'll throw it on the backburner. There is a bug to where the server crashes if a exception is thrown of any kind, so probably should remove exceptions and just put 
+inside of that alert message from the server. 

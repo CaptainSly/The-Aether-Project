@@ -16,11 +16,8 @@ javafx {
 
 dependencies {
 	implementation(project(":AetherLink"))
-	implementation("org.tinylog:tinylog-api:2.6.2")
-	implementation("org.tinylog:tinylog-impl:2.6.2")
-	implementation("com.github.iamgio:animated:v1.3.0")
-	implementation("io.github.palexdev:materialfx:11.17.0")
 	implementation("org.controlsfx:controlsfx:11.2.0")
+	implementation("org.kordamp.desktoppanefx:desktoppanefx-core:0.15.0")
 	implementation("org.kordamp.ikonli:ikonli-javafx:12.3.1")
 	implementation("org.kordamp.ikonli:ikonli-materialdesign2-pack:12.3.1")
 }

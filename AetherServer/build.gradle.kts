@@ -12,8 +12,4 @@ javafx {
 dependencies {
 	
 	implementation(project(":AetherLink"))
-	
-	// TinyLog2 
-	implementation("org.tinylog:tinylog-api:2.6.2")
-	implementation("org.tinylog:tinylog-impl:2.6.2")
 }
